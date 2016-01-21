@@ -7,6 +7,8 @@
 # Ignore bundler config.
 /.bundle
 
+/.vagrant
+
 # Ignore all logfiles and tempfiles.
 /log/*
 /tmp/*
@@ -15,3 +17,5 @@
 
 # Ignore Byebug command history file.
 .byebug_history
+
+*.pid.lock
