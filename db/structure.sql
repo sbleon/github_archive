@@ -38,34 +38,14 @@ SET default_with_oids = false;
 --
 
 CREATE TABLE events (
-    id integer NOT NULL,
+    id bigint NOT NULL,
     type character varying NOT NULL,
     user_id integer NOT NULL,
     repo_id integer NOT NULL,
     payload jsonb NOT NULL,
-    "timestamp" timestamp without time zone NOT NULL,
     created_at timestamp without time zone NOT NULL,
     updated_at timestamp without time zone NOT NULL
 );
-
-
---
--- Name: events_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE events_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: events_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE events_id_seq OWNED BY events.id;
 
 
 --
@@ -140,13 +120,6 @@ CREATE SEQUENCE users_id_seq
 --
 
 ALTER SEQUENCE users_id_seq OWNED BY users.id;
-
-
---
--- Name: id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY events ALTER COLUMN id SET DEFAULT nextval('events_id_seq'::regclass);
 
 
 --

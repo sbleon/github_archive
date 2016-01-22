@@ -1,11 +1,11 @@
 class CreateEvents < ActiveRecord::Migration[5.0]
   def change
-    create_table :events do |t|
+    create_table :events, id: false do |t|
+      t.integer :id, null: false, primary_key: true, limit: 8
       t.string :type, null: false
       t.references :user, null: false
       t.references :repo, null: false
       t.jsonb :payload, null: false
-      t.datetime :timestamp, null: false
 
       t.timestamps null: false
     end
