@@ -46,7 +46,5 @@ Vagrant.configure(2) do |config|
     echo "cd /vagrant" | sudo tee -a /etc/rc.local
     echo "passenger start" | sudo tee -a /etc/rc.local
     echo "exit 0" | sudo tee -a /etc/rc.local
-
-    sudo /etc/rc.local &
   SHELL
 end
