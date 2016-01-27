@@ -1,0 +1,14 @@
+- Data from https://www.githubarchive.org/
+- All events from 2016-01-01
+- 101MB compressed with gzip
+- 722MB uncompressed JSON
+- 360k events, 80k users, 94k repos
+- Show original event structure?
+- Show relational data model
+- Need to use structure.sql to store triggers, etc
+- What kinds of queries can benefit?
+  - Those that join multiple large tables
+  - Those that select from multiple tables
+  - Those with an order clause
+- SQL code is relatively difficult to maintain.
+  - E.g. adding a column is a lot of work!
