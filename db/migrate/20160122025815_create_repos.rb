@@ -6,7 +6,5 @@ class CreateRepos < ActiveRecord::Migration[5.0]
 
       t.timestamps null: false
     end
-
-    add_index :repos, :url, unique: true
   end
 end
