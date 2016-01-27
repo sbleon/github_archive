@@ -1,10 +1,13 @@
 Vagrant.configure(2) do |config|
   config.vm.box = "ubuntu/trusty64"
   config.vm.network "forwarded_port", guest: 3000, host: ENV.fetch('PORT', 3000)
+  config.vm.network "forwarded_port", guest: 5432, host: 15432
 
   config.vm.provider "virtualbox" do |v|
     v.memory = 1024
   end
+
+  config.vm.synced_folder ".", "/vagrant", mount_options: ["dmode=755","fmode=755"]
 
   config.vm.provision "shell", inline: <<-SHELL
     sudo apt-get update
