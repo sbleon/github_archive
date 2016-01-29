@@ -312,6 +312,20 @@ CREATE UNIQUE INDEX index_fast_event_reports_on_id ON fast_event_reports USING b
 
 
 --
+-- Name: index_fast_event_reports_on_repo_name_and_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_fast_event_reports_on_repo_name_and_type ON fast_event_reports USING btree (repo_name varchar_pattern_ops, type varchar_pattern_ops);
+
+
+--
+-- Name: index_fast_event_reports_on_username_and_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_fast_event_reports_on_username_and_type ON fast_event_reports USING btree (username varchar_pattern_ops, type varchar_pattern_ops);
+
+
+--
 -- Name: index_users_on_url; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -388,4 +402,6 @@ INSERT INTO schema_migrations (version) VALUES ('20160127010043');
 INSERT INTO schema_migrations (version) VALUES ('20160127013909');
 
 INSERT INTO schema_migrations (version) VALUES ('20160127013910');
+
+INSERT INTO schema_migrations (version) VALUES ('20160129015149');
 

@@ -1,2 +1,19 @@
 @import "bootstrap-sprockets";
 @import "bootstrap";
+@import "bootstrap/theme";
+
+body {
+  padding-top: 70px;
+}
+
+.form-group {
+  margin: 4px;
+}
+
+.form-control {
+  margin: 4px;
+}
+
+label.checkbox-inline {
+  font-weight: bold;
+}

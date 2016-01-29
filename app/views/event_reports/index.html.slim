@@ -1,0 +1,25 @@
+h1 Search Events
+
+.form-inline
+  = form_for @query, url: event_reports_path, method: :get do |f|
+    .form-group
+      label User
+      = f.text_field :username_fragment, class: 'form-control'
+    .form-group
+      label Repo
+      = f.text_field :repo_fragment, class: 'form-control'
+    .form-group
+      label Event Type
+      = f.select :event_type, @event_types, { include_blank: true }, class: 'form-control'
+    .form-group
+      label.checkbox-inline
+        = f.check_box :materialize
+        | Materialize?
+    = f.submit 'Search', class: 'btn btn-default'
+
+= paginate @event_reports, theme: 'twitter-bootstrap-3'
+
+p
+  = "#{number_with_delimiter(@count)} results"
+  br
+  = "Elapsed: #{number_with_delimiter(@time_elapsed)}ms"
