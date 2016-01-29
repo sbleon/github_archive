@@ -1,8 +1,8 @@
 desc 'Benchmark grabbing 100 random event reports, 100 times'
 task benchmark: :environment do
-  num_records = 359_000
+  num_records = 1_294_102
   limit = 100
-  runs = 10
+  runs = 3
 
   Benchmark.bmbm do |bm|
     bm.report('view') do

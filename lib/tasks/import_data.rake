@@ -45,6 +45,9 @@ task import_data: :environment do
         end
       rescue
       end
+
+      processed += 1
+      print '.' if (processed % 1000).zero?
     end
   end
 end
