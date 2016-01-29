@@ -6,6 +6,7 @@ gem 'jbuilder', '~> 2.0'
 gem 'jquery-rails'
 gem 'pg', '~> 0.18'
 gem 'rails', '>= 5.0.0.beta1', '< 5.1'
+gem 'slim-rails'
 gem 'turbolinks'
 gem 'uglifier', '>= 1.3.0'
 
