@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Roll-your-own Materialized Views</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+      .remark-slide-content {
+        font-size: 25px;
+      }
+    </style>
+    <script src="https://gnab.github.io/remark/downloads/remark-latest.min.js">
+    </script>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+# Roll-your-own Materialized Views
+## (for fun and profit!)
+
+Leon Miller-Out
+CTO, Singlebrook
+
+---
+## What's your experience?
+???
+Show of hands
+---
+## What's your experience?
+
+Who has...
+
+- built a relational-database-backed web app?
+
+???
+web app
+---
+## What's your experience?
+
+Who has...
+
+- built a relational-database-backed web app?
+- written some SQL?
+
+???
+SQL
+---
+## What's your experience?
+
+Who has...
+
+- built a relational-database-backed web app?
+- written some SQL?
+- created a database view?
+
+???
+DB view
+---
+## What's your experience?
+
+Who has...
+
+- built a relational-database-backed web app?
+- written some SQL?
+- created a database view?
+- created a trigger?
+
+???
+- Trigger
+- You know what you need to know so you can leave now ;-)
+---
+## What's your experience?
+
+Who has...
+
+- built a relational-database-backed web app?
+- written some SQL?
+- created a database view?
+- created a trigger?
+- encountered performance issues in a web app?
+
+???
+Performance issues
+---
+
+## Why am I talking about this boring database stuff?
+- Digital decay: as your database grows, your queries will "naturally" slow down.
+- Mitigating decay is required when maintaining a growing application.
+
+???
+- Have you ever had slow database queries slow down your application? If you haven't, you will someday. It's a kind of digital decay: dbs will slow down over time as the size grows.
+---
+## How do we fight against growth-induced database sluggishness?
+
+- optimize your queries (change SQL, change indexes, etc)
+
+???
+- You have several options for dealing with this:
+---
+## How do we fight against growth-induced database sluggishness?
+
+- optimize your queries (change SQL, change indexes, etc)
+- throw money at it (more hardware)
+---
+## How do we fight against growth-induced database sluggishness?
+
+- optimize your queries (change SQL, change indexes, etc)
+- throw money at it (more hardware)
+- change database infrastructure (sharding, replication, etc)
+
+???
+- Any or all of these options might be appropriate depending on your budget, the skillsets you're working with, your particular situation.
+- Sometimes the slowness is caused by expensive joins (typically when merging large datasets from multiple tables). If this is your problem, materialized views may be the answer.
+---
+## How do we fight against growth-induced database sluggishness?
+
+- optimize your queries (change SQL, change indexes, etc)
+- throw money at it (more hardware)
+- change database infrastructure (sharding, replication, etc)
+- Pre-calculate using Matarialized Views
+---
+## What is a Materialized View?
+
+- A view (aka a query) that is stored (on disk) like a table.
+???
+- Materialized View = A view stored like a table.
+---
+## What is a Materialized View?
+
+- A view (aka a query) that is stored (on disk) like a table.
+- Your DB can JOIN, filter, aggregate, etc once, and *re-use the result set*.
+
+???
+- Instead of joining all those rows every time you query, join them once, store the joined columns, and update it when necessary.
+- A materialized view is like a view in that it is composed of data from tables (which can includes joins, filters, aggregates, etc). However, unlike a view, it is stored on disk, like a table.
+---
+
+class: center, middle
+
+## Native Support?
+### We are not using CREATE MATERIALIZED VIEW
+
+???
+## Native Support
+- Your database engine may have some support for materialized views. E.g. Postgres has them, but there's one big pitfall. They must be regenerated all at once, instead of updating individual rows only when necessary. That does not work well for big tables. So for this talk, we will not be using that feature of Postgres.
+
+---
+
+```sql
+EXPLAIN
+SELECT *
+FROM "event_reports"
+WHERE (username like 'b%');
+```
+
+    </textarea>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
