@@ -291,6 +291,13 @@ CREATE INDEX index_events_on_repo_id ON events USING btree (repo_id);
 
 
 --
+-- Name: index_events_on_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_events_on_type ON events USING btree (type);
+
+
+--
 -- Name: index_events_on_user_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -326,6 +333,13 @@ CREATE INDEX index_fast_event_reports_on_username_and_type ON fast_event_reports
 
 
 --
+-- Name: index_repos_on_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX index_repos_on_name ON repos USING btree (name varchar_pattern_ops);
+
+
+--
 -- Name: index_users_on_url; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -336,7 +350,7 @@ CREATE UNIQUE INDEX index_users_on_url ON users USING btree (url);
 -- Name: index_users_on_username; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX index_users_on_username ON users USING btree (username);
+CREATE INDEX index_users_on_username ON users USING btree (username varchar_pattern_ops);
 
 
 --

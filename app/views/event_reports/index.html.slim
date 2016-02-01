@@ -23,3 +23,27 @@ p
   = "#{number_with_delimiter(@count)} results"
   br
   = "Elapsed: #{number_with_delimiter(@time_elapsed)}ms"
+
+.row
+  .col-sm-2
+    strong User
+  .col-sm-3
+    strong Repo
+  .col-sm-3
+    strong Type
+  .col-sm-3
+    strong Details
+- @event_reports.each do |er|
+  .row
+    .col-sm-2
+      .media
+        .media-left.media-middle
+          = image_tag "#{er.avatar_url}s=50", height: 50, width: 50
+        .media-body
+          = er.username
+    .col-sm-3
+      = er.repo_name
+    .col-sm-3
+      = er.type
+    .col-sm-3
+      = ap(er.payload).html_safe
