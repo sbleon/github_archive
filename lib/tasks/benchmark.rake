@@ -1,4 +1,4 @@
-desc 'Benchmark grabbing 100 random event reports, 100 times'
+desc 'Benchmark grabbing random event reports from view and mview'
 task benchmark: :environment do
   num_records = 1_294_102
   limit = 100

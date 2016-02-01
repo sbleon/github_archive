@@ -157,12 +157,208 @@ class: center, middle
 
 ---
 
-```sql
-EXPLAIN
-SELECT *
-FROM "event_reports"
-WHERE (username like 'b%');
+## Overview
+
+1. Create a view that pulls together the data
+2. Create a table with the same rows as the view. This is your materialized view.
+3. Create triggers that upsert the materialized view when the underlying tables' data changes.
+4. UPDATE all of the rows to trigger the triggers.
+
+---
+
+class: center, middle
+
+# Demo
+
+http://localhost:3000/event_reports
+
+???
+- I put together a tiny Rails app to view Github event data.
+- It's got all Github events for the first three days of this year, which is about 1.3M events records, and about 200K user and repo records. This is not a particularly large database, but should be big enough that JOINs take a bit of time to run.
+- Search for repo "ra"
+- Search for user "b"
+- Always sorting by event timestamp.
+
+---
+## Data model
+
 ```
+---------         ----------         ---------
+| Users | <-----> | Events | <-----> | Repos |
+--------- 1     * ---------- *     1 ---------
+```
+
+- Data from https://www.githubarchive.org/
+- All events from 2016-01-01 - 2016-01-03
+- 370MB compressed with gzip
+- 1.3M events, 200k users, 250k repos
+---
+## Step 1: Create regular view
+
+We're using a view to keep the query in the app very simple.
+
+```sql
+CREATE VIEW event_reports AS
+ SELECT events.id,
+    events.type,
+    events.created_at,
+    events.payload,
+    repos.id AS repo_id,
+    repos.name AS repo_name,
+    repos.url AS repo_url,
+    users.id AS user_id,
+    users.username,
+    users.url AS user_url,
+    users.avatar_url
+   FROM ((events
+     JOIN repos ON ((repos.id = events.repo_id)))
+     JOIN users ON ((users.id = events.user_id)));
+
+SELECT * FROM event_reports WHERE [some filters];
+```
+
+???
+- If you have a smaller amount of data, you could stop here and still get the
+  benefits of simpler application code. Switching to a materialized view later
+  will be (relatively) easy if you have this in place already.
+- (In Rails, you can set up an ActiveRecord class that uses this view for its table. This can help to simplify your code by removing repeated joins, and maybe improve your memory usage by creating fewer AR objects. YMMV with other ORMs.)
+---
+
+## Why is it slow?
+
+We must count the results in order to paginate, but counting is hard!
+
+```sql
+EXPLAIN SELECT COUNT(*) FROM "event_reports" WHERE (repo_name like 'ra%');
+```
+```
+                                                   QUERY PLAN
+-----------------------------------------------------------------------------------------------
+Aggregate  (cost=126124.19..126124.20 rows=1 width=0)
+  ->  Nested Loop  (cost=1521.50..126091.74 rows=12980 width=0)
+    ->  Hash Join  (cost=1521.08..120106.78 rows=12980 width=4)
+        Hash Cond: (events.repo_id = repos.id)
+        ->  Seq Scan on events  (cost=0.00..113603.02 rows=1294102 width=8)
+        ->  Hash  (cost=1489.87..1489.87 rows=2497 width=4)
+          ->  Bitmap Heap Scan on repos  (cost=18.37..1489.87 rows=2497 width=4)
+              Filter: ((name)::text ~~ 'ra%'::text)
+              ->  Bitmap Index Scan on index_repos_on_name  (cost=0.00..17.75 rows=533 width=0)
+                Index Cond: (((name)::text ~>=~ 'ra'::text) AND ((name)::text ~<~ 'rb'::text))
+    ->  Index Only Scan using users_pkey on users  (cost=0.42..0.45 rows=1 width=4)
+        Index Cond: (id = events.user_id)
+```
+
+???
+- If I were to look at query plans to troubleshoot the poor performance of the original, non-materialized approach, I might find something like this.
+- This is complex, and has a high estimated cost (126K hand-wavy units)
+- Filtering by data in one table, sorting on data in another. This means the JOINs and filtering need to happen before the sorting, requiring loading of lots of data from multiple tables. If the JOINing has already happened, Postgres can load records from only one table.
+
+---
+
+## Step 2: Create materialized view
+
+```sql
+CREATE TABLE fast_event_reports (
+    id bigint NOT NULL,
+    type character varying NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    payload jsonb NOT NULL,
+    repo_id integer NOT NULL,
+    repo_name character varying NOT NULL,
+    repo_url character varying NOT NULL,
+    user_id integer NOT NULL,
+    username character varying NOT NULL,
+    user_url character varying NOT NULL,
+    avatar_url character varying NOT NULL
+);
+
+ALTER TABLE fast_event_reports
+ADD CONSTRAINT fk_fast_event_reports_events (id)
+REFERENCES events (id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE fast_event_reports
+ADD CONSTRAINT fk_fast_event_reports_repos (repo_id)
+REFERENCES repos (id) ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE fast_event_reports
+ADD CONSTRAINT fk_fast_event_reports_users (user_id)
+REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE;
+```
+???
+- This table will be empty. How do we fill it and keep it up to date?
+---
+
+## Step 3: Create triggers
+
+```sql
+CREATE FUNCTION fn_trig_upsert_event() RETURNS trigger
+  LANGUAGE plpgsql AS $$
+BEGIN
+  INSERT INTO fast_event_reports(
+    id, type, created_at, payload, repo_id, repo_name, repo_url,
+    username, user_id, user_url, avatar_url)
+  SELECT id, type, created_at, payload, repo_id, repo_name, repo_url,
+    username, user_id, user_url, avatar_url
+  FROM event_reports
+  WHERE id = NEW.id
+
+  ON CONFLICT(id) DO UPDATE
+  SET type = EXCLUDED.type,
+      created_at = EXCLUDED.created_at,
+      payload = EXCLUDED.payload;
+
+  RETURN null;
+END
+$$;
+
+CREATE TRIGGER trig_upsert_event
+AFTER INSERT OR UPDATE ON events
+FOR EACH ROW EXECUTE PROCEDURE fn_trig_upsert_event();
+```
+
+Create a similar function for each table.
+
+???
+- We only need to handle INSERTs and UPDATEs because DELETEs are cascaded via foreign keys.
+- This uses a slick new feature of Postgres 9.5 "ON CONFLICT DO UPDATE" that does conflict-free upserts! See your RDBMS' documentation to figure out the best way to upsert in it.
+- All of the triggers pull data from the view, so the JOINs do not need to be repeated in each trigger.
+- I think that all triggers could be handled by a function that creates and runs SQL, but I haven't tried this yet.
+
+---
+
+## Step 4: UPDATE all rows to trigger the triggers, populating the materialized view
+
+```sql
+UPDATE events
+SET id = id;
+```
+
+If you have a busy database, consider doing this in batches to avoid needing a table lock.
+
+???
+- That is a silly-looking query!
+---
+
+## Step 5: Profit!
+
+Benchmark grabbing 100 records from a random offset, 3 times each.
+```
+            user     system      total        real
+view    0.020000   0.000000   0.020000 ( 32.662143)
+mview   0.010000   0.010000   0.020000 (  3.311239)
+```
+---
+
+class: center, middle
+
+# Questions?
+
+Contact me at leon@singlebrook.com or on Meetup.com!
+
+https://github.com/sbleon/github_archive
+
+???
+- If anyone wants a copy of my Vagrant box to play around with this, I can make it available.
 
     </textarea>
     <script>

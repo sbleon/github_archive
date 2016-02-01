@@ -66,7 +66,7 @@
   - (You can set up an ActiveRecord class that uses this view for its table. This can help to simplify your code by removing repeated joins, and maybe improve your memory usage by creating fewer AR objects.)
 - Create a table with the same rows as the view. This is your materialized view. (Show migration)
 - Create triggers that upsert the materialized view when the underlying tables' data changes.
-  - This uses a slick new feature of Postgres 9.5 "ON CONFLICT DO UPDATE" that does conflict-free upserts! See your RDBMS' documentation to figure out the best way to upsert in it.
+  - This uses a slick new feature of Postgres 9.5 "ON CONFLICT DO UPDATE" that does conflict-free upserts! MySQL has a similar feature. See your RDBMS' documentation to figure out the best way to upsert in it.
 - All of the triggers pull data from the view, so the JOINs do not need to be repeated in each trigger.
 - UPDATE all of the rows to trigger the triggers.
   - If you have a busy database, consider doing this in batches to avoid needing a table lock.
