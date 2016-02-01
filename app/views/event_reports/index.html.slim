@@ -45,5 +45,5 @@ p
       = er.repo_name
     .col-sm-3
       = er.type
-    .col-sm-3
-      = ap(er.payload).html_safe
+    .col-sm-4.payload
+      = ap(er.payload, indent: 2).html_safe
