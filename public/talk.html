@@ -45,18 +45,21 @@ class: center, middle
 ## (for fun and profit!)
 
 Leon Miller-Out
-CTO, Singlebrook
 
+Singlebrook
+???
+- Introduce me
+- Introduce talk
 ---
 ## What's your database experience?
 ???
-Show of hands
+Let's see a show of hands
 ---
 ## What's your database experience?
 
 Who has...
 
-- built a relational-database-backed web app?
+- built a database-backed web app?
 
 ???
 web app
@@ -65,7 +68,7 @@ web app
 
 Who has...
 
-- built a relational-database-backed web app?
+- built a database-backed web app?
 - written some SQL?
 
 ???
@@ -75,9 +78,9 @@ SQL
 
 Who has...
 
-- built a relational-database-backed web app?
+- built a database-backed web app?
 - written some SQL?
-- written a JOIN?
+- written a SQL JOIN?
 
 ???
 JOIN
@@ -86,9 +89,9 @@ JOIN
 
 Who has...
 
-- built a relational-database-backed web app?
+- built a database-backed web app?
 - written some SQL?
-- written a JOIN?
+- written a SQL JOIN?
 - created a database view?
 
 ???
@@ -98,9 +101,9 @@ DB view
 
 Who has...
 
-- built a relational-database-backed web app?
+- built a database-backed web app?
 - written some SQL?
-- written a JOIN?
+- written a SQL JOIN?
 - created a database view?
 - created a trigger?
 
@@ -112,12 +115,14 @@ Who has...
 
 Who has...
 
-- built a relational-database-backed web app?
+- built a database-backed web app?
 - written some SQL?
-- written a JOIN?
+- written a SQL JOIN?
 - created a database view?
 - created a trigger?
-- encountered performance issues in a web app?
+
+Who has..
+- encountered performance issues in their web app?
 
 ???
 Performance issues
@@ -129,26 +134,32 @@ Performance issues
 - This is generally a good problem to have, because it usually means people are using your software!
 
 ???
-- Have you ever had slow database queries slow down your application? If you haven't, you will someday. It's a kind of digital decay: dbs will slow down over time as the size grows.
-- Unless you hate your users, that is!
+- Mitigating is required, unless you hate your users, that is!
+- If you haven't encountered this yet, you will someday.
 ---
-## How do we fight against growth-induced database sluggishness?
+## How can we fight growth-induced DB slowness?
 
-- optimize your queries (change SQL, change indexes, etc)
+- Optimize your queries
+  - change SQL
+  - change indexes
 
 ???
 - You have several options for dealing with this:
 ---
 ## How do we fight against growth-induced database sluggishness?
 
-- optimize your queries (change SQL, change indexes, etc)
-- throw money at it (more hardware)
+- Optimize your queries
+  - change SQL
+  - change indexes
+- Throw money at it (more hardware)
 ---
 ## How do we fight against growth-induced database sluggishness?
 
-- optimize your queries (change SQL, change indexes, etc)
-- throw money at it (more hardware)
-- change database infrastructure (sharding, replication, etc)
+- Optimize your queries
+  - change SQL
+  - change indexes
+- Throw money at it (more hardware)
+- Change database infrastructure (sharding, replication, etc)
 
 ???
 - Any or all of these options might be appropriate depending on your budget, the skillsets you're working with, your particular situation.
@@ -156,10 +167,12 @@ Performance issues
 ---
 ## How do we fight against growth-induced database sluggishness?
 
-- optimize your queries (change SQL, change indexes, etc)
-- throw money at it (more hardware)
-- change database infrastructure (sharding, replication, etc)
-- Pre-calculate using Matarialized Views
+- Optimize your queries
+  - change SQL
+  - change indexes
+- Throw money at it (more hardware)
+- Change database infrastructure (sharding, replication, etc)
+- Pre-calculate using matarialized views
 ---
 ## What is a View?
 
@@ -175,25 +188,31 @@ Performance issues
 
   SELECT * FROM event_reports LIMIT 1;
 
-      type    |  username  |    repo_name
-  ------------+------------+-----------------
+       type    |  username  |    repo_name
+  -----------+------------+-----------------
    WatchEvent | Deovandski | bssthu/KSP_GPWS
   ```
 ---
 ## What is a Materialized View?
 
-- A view (aka a stored query) that is stored (on disk) like a table.
+- A view whose rows are stored on disk (like a table).
 ???
-- Materialized View = A view stored like a table.
+- Materialized View is a view whose rows are stored on disk (like a table).
 ---
 ## What is a Materialized View?
 
-- A view (aka a query) that is stored (on disk) like a table.
-- Your DB can JOIN, filter, and aggregate *once*, and **re-use the results**.
-
+- A view whose rows are stored on disk (like a table).
+- It contains data from other tables, but is always up-to-date.
 ???
-- Instead of joining all those rows every time you query, join them once, store the joined columns, and update it when necessary.
-- A materialized view is like a view in that it is composed of data from tables (which can includes joins, filters, aggregates, etc). However, unlike a view, it is stored on disk, like a table.
+- It contains data from other tables, but is always up-to-date.
+---
+## What is a Materialized View?
+
+- A view whose rows are stored on disk (like a table).
+- It contains data from other tables, but is always up-to-date.
+- Your DB can JOIN, filter, and aggregate data from those other tables *once*, and **re-use the results**.
+???
+- Your DB can JOIN, filter, and aggregate data from those other tables *once*, and **re-use the results**.
 ---
 
 class: center, middle
@@ -210,9 +229,9 @@ class: center, middle
 ## Overview
 
 1. Create a view that pulls together the data
-2. Create a table with the same rows as the view. This is your materialized view.
+2. Create a table with the same columns as the view. This is our materialized view.
 3. Create triggers that upsert the materialized view when the underlying tables' data changes.
-4. UPDATE all of the rows to trigger the triggers.
+4. UPDATE all of the rows to trigger the triggers, populating the materialized view.
 
 ---
 
@@ -462,6 +481,7 @@ Contact me at leon@singlebrook.com or on Meetup.com!
 
 https://github.com/sbleon/github_archive
 
+(Made with remark - http://remarkjs.com)
 ???
 - If anyone wants a copy of my Vagrant box to play around with this, I can make it available.
 
