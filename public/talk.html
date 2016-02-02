@@ -14,8 +14,23 @@
         font-weight: normal;
       }
       .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+      .remark-notes {
+        font-size: 20px;
+      }
+      .remark-notes li {
+        margin-bottom: 0.5em;
+      }
       .remark-slide-content {
         font-size: 25px;
+      }
+      .remark-slide-content ul {
+        margin-top: 0.5em;
+      }
+      .remark-slide-content li {
+        margin-bottom: 0.5em;
+      }
+      .remark-slide-content h3 {
+        margin-bottom: 0.2em;
       }
     </style>
     <script src="https://gnab.github.io/remark/downloads/remark-latest.min.js">
@@ -33,11 +48,11 @@ Leon Miller-Out
 CTO, Singlebrook
 
 ---
-## What's your experience?
+## What's your database experience?
 ???
 Show of hands
 ---
-## What's your experience?
+## What's your database experience?
 
 Who has...
 
@@ -46,7 +61,7 @@ Who has...
 ???
 web app
 ---
-## What's your experience?
+## What's your database experience?
 
 Who has...
 
@@ -56,23 +71,36 @@ Who has...
 ???
 SQL
 ---
-## What's your experience?
+## What's your database experience?
 
 Who has...
 
 - built a relational-database-backed web app?
 - written some SQL?
+- written a JOIN?
+
+???
+JOIN
+---
+## What's your database experience?
+
+Who has...
+
+- built a relational-database-backed web app?
+- written some SQL?
+- written a JOIN?
 - created a database view?
 
 ???
 DB view
 ---
-## What's your experience?
+## What's your database experience?
 
 Who has...
 
 - built a relational-database-backed web app?
 - written some SQL?
+- written a JOIN?
 - created a database view?
 - created a trigger?
 
@@ -80,12 +108,13 @@ Who has...
 - Trigger
 - You know what you need to know so you can leave now ;-)
 ---
-## What's your experience?
+## What's your database experience?
 
 Who has...
 
 - built a relational-database-backed web app?
 - written some SQL?
+- written a JOIN?
 - created a database view?
 - created a trigger?
 - encountered performance issues in a web app?
@@ -95,11 +124,13 @@ Performance issues
 ---
 
 ## Why am I talking about this boring database stuff?
-- Digital decay: as your database grows, your queries will "naturally" slow down.
-- Mitigating decay is required when maintaining a growing application.
+- Software rot: as your database grows, your queries will "naturally" slow down.
+- Mitigating this decay is required when maintaining a growing application.
+- This is generally a good problem to have, because it usually means people are using your software!
 
 ???
 - Have you ever had slow database queries slow down your application? If you haven't, you will someday. It's a kind of digital decay: dbs will slow down over time as the size grows.
+- Unless you hate your users, that is!
 ---
 ## How do we fight against growth-induced database sluggishness?
 
@@ -130,16 +161,35 @@ Performance issues
 - change database infrastructure (sharding, replication, etc)
 - Pre-calculate using Matarialized Views
 ---
+## What is a View?
+
+- A stored SQL query that you can read from as if it were a table.
+- Views can be seen as a kind of code re-use, helping to keep your SQL DRY (Don't Repeat Yourself)
+- e.g.
+  ```sql
+  CREATE VIEW event_reports AS
+  SELECT events.type, repos.name as repo_name, users.username
+  FROM events
+    INNER JOIN repos ON repos.id = events.repo_id
+    INNER JOIN users ON users.id = events.user_id;
+
+  SELECT * FROM event_reports LIMIT 1;
+
+      type    |  username  |    repo_name
+  ------------+------------+-----------------
+   WatchEvent | Deovandski | bssthu/KSP_GPWS
+  ```
+---
 ## What is a Materialized View?
 
-- A view (aka a query) that is stored (on disk) like a table.
+- A view (aka a stored query) that is stored (on disk) like a table.
 ???
 - Materialized View = A view stored like a table.
 ---
 ## What is a Materialized View?
 
 - A view (aka a query) that is stored (on disk) like a table.
-- Your DB can JOIN, filter, aggregate, etc once, and *re-use the result set*.
+- Your DB can JOIN, filter, and aggregate *once*, and **re-use the results**.
 
 ???
 - Instead of joining all those rows every time you query, join them once, store the joined columns, and update it when necessary.
@@ -347,6 +397,61 @@ Benchmark grabbing 100 records from a random offset, 3 times each.
 view    0.020000   0.000000   0.020000 ( 32.662143)
 mview   0.010000   0.010000   0.020000 (  3.311239)
 ```
+This is roughly a 10x speed improvement!
+---
+
+### Before
+```sql
+EXPLAIN SELECT * FROM event_reports ORDER BY created_at
+LIMIT 100 OFFSET 9710;
+
+Limit  (cost=11503.78..11622.24 rows=100 width=752)
+  ->  Nested Loop  (cost=1.27..1533000.72 rows=1294102 width=752)
+    ->  Nested Loop  (cost=0.85..936302.07 rows=1294102 width=656)
+        ->  Index Scan using index_events_on_created_at on events  (cost=0.43..338039.43 rows=1294102 width=581)
+        ->  Index Scan using repos_pkey on repos  (cost=0.42..0.45 rows=1 width=79)
+          Index Cond: (id = events.repo_id)
+    ->  Index Scan using users_pkey on users  (cost=0.42..0.45 rows=1 width=100)
+        Index Cond: (id = events.user_id)
+```
+---
+### Before
+```sql
+EXPLAIN SELECT * FROM event_reports ORDER BY created_at
+LIMIT 100 OFFSET 9710;
+
+Limit  (cost=11503.78..11622.24 rows=100 width=752)
+  ->  Nested Loop  (cost=1.27..1533000.72 rows=1294102 width=752)
+    ->  Nested Loop  (cost=0.85..936302.07 rows=1294102 width=656)
+        ->  Index Scan using index_events_on_created_at on events  (cost=0.43..338039.43 rows=1294102 width=581)
+        ->  Index Scan using repos_pkey on repos  (cost=0.42..0.45 rows=1 width=79)
+          Index Cond: (id = events.repo_id)
+    ->  Index Scan using users_pkey on users  (cost=0.42..0.45 rows=1 width=100)
+        Index Cond: (id = events.user_id)
+```
+### After
+```sql
+EXPLAIN SELECT * FROM fast_event_reports ORDER BY created_at
+LIMIT 100 OFFSET 9710;
+
+Limit  (cost=1698.43..1715.92 rows=100 width=728)
+  ->  Index Scan using index_fast_event_reports_on_created_at on fast_event_reports  (cost=0.43..226301.87 rows=1294102 width=728)
+```
+---
+### Pros
+- This can speed up queries. What kinds of queries can benefit?
+  - Those that join multiple large tables
+  - Those using ORDER BY and WHERE clause
+  - Those that handle a large number of rows
+- Get more performance with current database hardware
+- Developers learn more about SQL
+
+### Cons
+- SQL code is relatively difficult to maintain.
+  - E.g. adding a column is a lot of work!
+    - Columns must to be added in multiple places
+    - All triggers must be updated
+- Developers need to know some SQL
 ---
 
 class: center, middle
